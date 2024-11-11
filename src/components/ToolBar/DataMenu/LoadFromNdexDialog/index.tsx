@@ -215,7 +215,15 @@ const LoadFromNdexDialog = (
           />
         )}
         {loading ? (
-          <CircularProgress />
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 100,
+            width: 'full',
+          }}>
+            <CircularProgress />
+          </Box>
         ) : errorMessage ? (
           <Typography>{errorMessage}</Typography>
         ) : (currentTabIndex === 0 ? searchResultNetworks : myNetworks).length === 0 ? (
