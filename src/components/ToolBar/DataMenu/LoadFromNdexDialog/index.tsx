@@ -125,33 +125,39 @@ const LoadFromNdexDialog = (
       setLoading(true)
       fetchMyNetworks()
         .then((networks) => {
-          setMyNetworks(networks)
-          setLoading(false)
+          setMyNetworks(networks);
+          setErrorMessage(undefined); // clear any previous error
         })
         .catch((err) => {
-          setErrorMessage(err.message)
-          setLoading(false)
+          console.error("Failed to fetch networks:", err);
+          setErrorMessage(err?.message || "An unknown error occurred");
         })
+        .finally(() => {
+          setLoading(false); // ensure loading stops regardless of success or failure
+        });
     } else {
       setMyNetworks([])
     }
   }, [authenticated])
 
   useEffect(() => {
-    if (!open) {
-      return
-    }
+    if (!open) return;
 
-    setLoading(true)
+    setLoading(true);
+    setErrorMessage(undefined); // clear previous error messages
+
     fetchSearchResults('')
       .then(() => {
-        setLoading(false)
+        setLoading(false);
       })
       .catch((err) => {
-        setErrorMessage(err.message)
-        setLoading(false)
+        console.error("Error fetching search results:", err);
+        setErrorMessage(err?.message || "An error occurred while loading results");
       })
-  }, [open])
+      .finally(() => {
+        setLoading(false); // ensure loading stops regardless of success or failure
+      });
+  }, [open]);
 
   const fetchSearchResults = async (searchValue: string): Promise<void> => {
     setLoading(true)
