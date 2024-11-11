@@ -22,7 +22,7 @@ const NetworkTable = ({
   onToggleSelect,
 }: NetworkTableProps): ReactElement => (
   <Box>
-    <TableContainer sx={{ height: 460 }}>
+    <TableContainer sx={{ height: 400 }}>
       <Table size="small" stickyHeader>
         <NetworkTableHeader />
         <TableBody>
