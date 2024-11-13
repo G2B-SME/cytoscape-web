@@ -223,12 +223,14 @@ const LoadFromNdexDialog = (
         {loading ? (
           <Box sx={{
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             height: 100,
             width: 'full',
           }}>
             <CircularProgress />
+            <Typography>Loading...</Typography>
           </Box>
         ) : errorMessage ? (
           <Typography>{errorMessage}</Typography>
