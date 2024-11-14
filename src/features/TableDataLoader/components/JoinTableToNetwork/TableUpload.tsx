@@ -21,6 +21,7 @@ import {
   useJoinTableToNetworkStore,
   JoinTableToNetworkStep,
 } from '../../store/joinTableToNetworkStore'
+import { FileDropzone } from '../../../../components/Util/FileDropzone'
 
 export function TableUpload(props: BaseMenuProps) {
   const setFile = useJoinTableToNetworkStore((state) => state.setFile)
@@ -75,58 +76,19 @@ export function TableUpload(props: BaseMenuProps) {
   }
 
   return (
-    // <Box sx={{ height: 500 }}>
     <>
-      <Dropzone
-        onDrop={(files: any) => {
-          onFileDrop(files[0])
-        }}
-        onReject={(files: any) => {
-          onFileError()
-        }}
-        // maxSize={}
-        accept={['text/*']}
-      >
-        <Group
-          justify="center"
-          gap="xl"
-          mih={220}
-          style={{ pointerEvents: 'none' }}
-        >
-          <Dropzone.Accept>
-            <IconUpload
-              style={{
-                width: rem(52),
-                height: rem(52),
-                color: 'var(--mantine-color-blue-6)',
-              }}
-              stroke={1.5}
-            />
-          </Dropzone.Accept>
-          <Dropzone.Reject>
-            <IconX
-              style={{
-                width: rem(52),
-                height: rem(52),
-                color: 'var(--mantine-color-red-6)',
-              }}
-              stroke={1.5}
-            />
-          </Dropzone.Reject>
-
-          <Stack align="center">
-            <Button>Browse</Button>
-            <Text size="xl" inline>
-              Or drag a tabular file here
-            </Text>
-            <Text size="sm" c="dimmed" inline mt={7}>
-              Files under 5mb supported
-            </Text>
-          </Stack>
-        </Group>
-      </Dropzone>
+      <FileDropzone
+        onDrop={onFileDrop} // handle file drop
+        onReject={onFileError} // handle file rejection
+        acceptedFileTypes={[
+          'text/csv',
+          'application/vnd.ms-excel',
+          'text/tab-separated-values',
+        ]} // specify accepted file types
+        errorMessage="The uploaded file is not valid"
+        infoMessage="Or drag a tabular file here"
+        buttonText="Browse"
+      />
     </>
-
-    // </Box>
   )
 }

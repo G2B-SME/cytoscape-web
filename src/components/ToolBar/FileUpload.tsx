@@ -18,7 +18,6 @@ import { notifications } from '@mantine/notifications'
 import Papa from 'papaparse'
 import { ModalsProvider, modals } from '@mantine/modals'
 import { v4 as uuidv4 } from 'uuid'
-
 import { Cx2 } from '../../models/CxModel/Cx2'
 import {
   getAttributeDeclarations,
@@ -48,22 +47,11 @@ import { useNetworkSummaryStore } from '../../store/NetworkSummaryStore'
 import { generateUniqueName } from '../../utils/network-utils'
 import { VisualStyleOptions } from '../../models/VisualStyleModel/VisualStyleOptions'
 import { useUiStateStore } from '../../store/UiStateStore'
-
-interface FileUploadProps {
-  show: boolean
-  handleClose: () => void
-}
+import { FileUploadProps, FullNetworkData } from './FileUpload.types'
+import { SupportedFileType } from './FileUpload.types'
+import { FileDropzone } from '../Util/FileDropzone'
 
 export function FileUpload(props: FileUploadProps) {
-  interface FullNetworkData {
-    network: Network
-    nodeTable: Table
-    edgeTable: Table
-    visualStyle: VisualStyle
-    networkView: NetworkView
-    visualStyleOptions: VisualStyleOptions
-  }
-
   const setCurrentNetworkId = useWorkspaceStore(
     (state) => state.setCurrentNetworkId,
   )
@@ -125,7 +113,9 @@ export function FileUpload(props: FileUploadProps) {
       let localName: string = ''
       for (const item of json) {
         if (
-          Boolean(item.networkAttributes) &&
+          Array.isArray(item.networkAttributes) &&
+          item.networkAttributes.length > 0 &&
+          item.networkAttributes[0] &&
           typeof item.networkAttributes[0].name === 'string'
         ) {
           localName = item.networkAttributes[0].name
@@ -135,8 +125,10 @@ export function FileUpload(props: FileUploadProps) {
       let localDescription: string = ''
       for (const item of json) {
         if (
-          Boolean(item.networkAttributes) &&
-          typeof item.networkAttributes[0].name === 'string'
+          Array.isArray(item.networkAttributes) &&
+          item.networkAttributes.length > 0 &&
+          item.networkAttributes[0] &&
+          typeof item.networkAttributes[0].description === 'string'
         ) {
           localDescription = item.networkAttributes[0].description
           break
@@ -211,6 +203,9 @@ export function FileUpload(props: FileUploadProps) {
       setViewModel(localUuid, networkView)
       props.handleClose()
     } catch (error) {
+      onFileError(
+        'Failed to process CX2 file. Please check the file format and try again.',
+      )
       console.error(error)
     }
   }
@@ -222,11 +217,11 @@ export function FileUpload(props: FileUploadProps) {
   const goToStep = useCreateNetworkFromTableStore((state) => state.goToStep)
   const setRawText = useCreateNetworkFromTableStore((state) => state.setRawText)
   const setName = useCreateNetworkFromTableStore((state) => state.setName)
-  const onFileError = () => {
+  const onFileError = (message: string) => {
     notifications.show({
       color: 'red',
       title: 'Error uploading file',
-      message: 'The uploaded file is not valid',
+      message: message,
       autoClose: 5000,
     })
   }
@@ -234,7 +229,6 @@ export function FileUpload(props: FileUploadProps) {
   const handleTableFile = (file: File, text: string) => {
     // Parse CSV here using PapaParse
     // const result = Papa.parse(text)
-
     const name = generateUniqueName(
       Object.values(summaries).map((s) => s.name),
       file.name,
@@ -248,94 +242,66 @@ export function FileUpload(props: FileUploadProps) {
     props.handleClose()
   }
 
+  const SUPPORTED_FILE_TYPES: SupportedFileType[] = [
+    SupportedFileType.CSV,
+    SupportedFileType.TXT,
+    SupportedFileType.TSV,
+  ]
+
   const onFileDrop = (file: File) => {
     const reader = new FileReader()
     reader.addEventListener('load', () => {
       const text = reader.result as string
-
-      const fileExtension = file.name.split('.').pop()
-      if (fileExtension === 'cx2') {
+      if (!text.trim()) {
+        onFileError('The uploaded file is empty.')
+        return
+      }
+      const fileExtension = file.name.split('.').pop() as string
+      if (fileExtension === SupportedFileType.CX2) {
         handleCX2File(text)
-      } else {
+      } else if (
+        SUPPORTED_FILE_TYPES.includes(fileExtension as SupportedFileType)
+      ) {
         handleTableFile(file, text)
+      } else {
+        onFileError(
+          'File type not supported. Please upload a valid .csv, .txt, .tsv, or .cx2 file.',
+        )
       }
     })
     reader.readAsText(file)
   }
 
   return (
-    <>
-      <PrimeReactProvider>
-        <MantineProvider>
-          <ModalsProvider>
-            <Modal
-              onClose={() => props.handleClose()}
-              opened={props.show}
-              zIndex={2000}
-              centered
-              title={
-                <Title c="gray" order={4}>
-                  Upload file
-                </Title>
+    <PrimeReactProvider>
+      <MantineProvider>
+        <ModalsProvider>
+          <Modal
+            onClose={() => props.handleClose()}
+            opened={props.show}
+            zIndex={2000}
+            centered
+            title={
+              <Title c="gray" order={4}>
+                Upload file
+              </Title>
+            }
+          >
+            <FileDropzone
+              onDrop={onFileDrop}
+              onReject={() =>
+                onFileError(
+                  'The uploaded file is not valid. Please upload a valid .csv, .txt, .tsv, or .cx2 file.',
+                )
               }
-            >
-              <Dropzone
-                onDrop={(files: any) => {
-                  onFileDrop(files[0])
-                }}
-                onReject={(files: any) => {
-                  onFileError()
-                }}
-                // maxSize={}
-              >
-                <Group
-                  justify="center"
-                  gap="xl"
-                  mih={220}
-                  style={{ pointerEvents: 'none' }}
-                >
-                  <Dropzone.Accept>
-                    <IconUpload
-                      style={{
-                        width: rem(52),
-                        height: rem(52),
-                        color: 'var(--mantine-color-blue-6)',
-                      }}
-                      stroke={1.5}
-                    />
-                  </Dropzone.Accept>
-                  <Dropzone.Reject>
-                    <IconX
-                      style={{
-                        width: rem(52),
-                        height: rem(52),
-                        color: 'var(--mantine-color-red-6)',
-                      }}
-                      stroke={1.5}
-                    />
-                  </Dropzone.Reject>
-
-                  <Stack align="center">
-                    <Button>Browse</Button>
-                    <Text size="xl" inline>
-                      Drag file here
-                    </Text>
-                    <Text size="sm" c="dimmed" inline mt={7}>
-                      Supported file types: .csv, .txt, .tsv, .cx2.
-                    </Text>
-                    <Text size="sm" c="dimmed" inline>
-                      Microsoft Excel files are not supported.
-                    </Text>
-                    <Text size="sm" c="dimmed" inline mt={7}>
-                      Files under 5mb supported.
-                    </Text>
-                  </Stack>
-                </Group>
-              </Dropzone>
-            </Modal>
-          </ModalsProvider>
-        </MantineProvider>
-      </PrimeReactProvider>
-    </>
+              acceptedFileTypes={SUPPORTED_FILE_TYPES}
+              errorMessage="The uploaded file is not valid"
+              infoMessage="Drag a file here"
+              buttonText="Browse"
+            />
+          </Modal>
+        </ModalsProvider>
+      </MantineProvider>
+    </PrimeReactProvider>
   )
 }
