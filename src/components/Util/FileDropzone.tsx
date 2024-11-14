@@ -33,13 +33,13 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   return (
     <Dropzone
       onDrop={(files: any) => {
-        onDrop(files[0]) // handle file drop
+        onDrop(files[0])
       }}
       onReject={(files: any) => {
-        onReject(files) // handle file reject
-        handleFileError() // show error if file is rejected
+        onReject(files)
+        handleFileError()
       }}
-      accept={acceptedFileTypes} // specify accepted file types
+      accept={acceptedFileTypes}
     >
       <Group
         justify="center"

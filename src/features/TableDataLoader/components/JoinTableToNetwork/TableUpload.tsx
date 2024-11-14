@@ -78,13 +78,13 @@ export function TableUpload(props: BaseMenuProps) {
   return (
     <>
       <FileDropzone
-        onDrop={onFileDrop} // handle file drop
-        onReject={onFileError} // handle file rejection
+        onDrop={onFileDrop}
+        onReject={onFileError}
         acceptedFileTypes={[
           'text/csv',
           'application/vnd.ms-excel',
           'text/tab-separated-values',
-        ]} // specify accepted file types
+        ]}
         errorMessage="The uploaded file is not valid"
         infoMessage="Or drag a tabular file here"
         buttonText="Browse"
