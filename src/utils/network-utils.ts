@@ -1,4 +1,4 @@
-// Selected For Drawing Call Graph
+// Selected For Drawing Call Graph (WuBang)
 // Network Naming Utilities
 export function generateUniqueName(existingNames: string[] | Set<string>, proposedName: string): string {
     if (existingNames instanceof Set) {
