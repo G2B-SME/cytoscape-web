@@ -70,8 +70,7 @@ export const BugReportMenuItem = ({
 }: BugReportMenuItemProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const triggerRef = useRef<HTMLDivElement>(null);
-
+ 
   const handleOpen = () => {
     setOpen(true)
   }
@@ -82,6 +81,8 @@ export const BugReportMenuItem = ({
       handleClose()
     }
   }
+
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) {
