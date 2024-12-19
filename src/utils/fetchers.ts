@@ -6,6 +6,7 @@ import { NDEx } from '@js4cytoscape/ndex-client'
 const DEF_URL = 'dev.ndexbio.org'
 let ndexClient: NDEx = new NDEx(DEF_URL)
 
+// Selected for performing Impact Analysis (Zi Lii)
 export const ndexNetworkFetcher = async (
   ndexUuid: string,
   url: string,
