@@ -54,6 +54,7 @@ interface FileUploadProps {
   handleClose: () => void
 }
 
+// Selected for performing Impact Analysis (Jing Shan)
 export function FileUpload(props: FileUploadProps) {
   interface FullNetworkData {
     network: Network
