@@ -123,6 +123,7 @@ const CoreAspectTagValueSet = new Set<string>(
   Object.values(CoreAspectTag) as string[],
 )
 
+//Selected function for call graph (Jonathan)
 /**
  * Extract optional aspects from CX2
  *
