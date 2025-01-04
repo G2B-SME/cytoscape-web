@@ -1,12 +1,11 @@
 import { MenuItem } from '@mui/material'
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useState } from 'react'
 import { useWorkspaceStore } from '../../../store/WorkspaceStore'
 import { BaseMenuProps } from '../BaseMenuProps'
 import { ConfirmationDialog } from '../../Util/ConfirmationDialog'
 
 export const RemoveNetworkMenuItem = (props: BaseMenuProps): ReactElement => {
   const [open, setOpen] = useState<boolean>(false)
-
   const deleteCurrentNetwork = useWorkspaceStore(
     (state) => state.deleteCurrentNetwork,
   )
