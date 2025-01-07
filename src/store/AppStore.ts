@@ -75,6 +75,7 @@ export const useAppStore = create(
         })
       } catch (error) {
         console.error(`Failed to fetch service metadata from ${url}`, error)
+        alert('Failed to fetch service! Please try again.')
       }
     },
 
