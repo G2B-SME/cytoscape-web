@@ -1,7 +1,6 @@
 import Button from '@mui/material/Button'
-import Menu from '@mui/material/Menu'
 import { Box, Divider, MenuItem, Tooltip } from '@mui/material'
-import { useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { LayoutEngine } from '../../../models/LayoutModel/LayoutEngine'
 import { useViewModelStore } from '../../../store/ViewModelStore'
 import { IdType } from '../../../models/IdType'
@@ -52,8 +51,10 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
     positions: Map<IdType, [number, number, number?]>,
   ) => void = useViewModelStore((state) => state.updateNodePositions)
 
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-  const target: Network = networks.get(targetNetworkId) ?? ({} as Network)
+  const target: Network = useMemo(
+    () => networks.get(targetNetworkId) ?? ({} as Network),
+    [networks, targetNetworkId]
+  );
 
   const summary = useNetworkSummaryStore(
     (state) => state.summaries[currentNetworkId],
@@ -62,25 +63,21 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
   const cellViewIsSelected = activeNetworkViewTabIndex === 1
 
   //disable layouts for cell view, meaning
-  const disabled =
+  const disabled = useMemo(() =>
     isHCX(summary) && // the current network is a hierarchy
     currentNetworkId === targetNetworkId && // the hierarchy network is the active view
-    cellViewIsSelected // the cell view tab is selected
+    cellViewIsSelected, // the cell view tab is selected
+    [summary, currentNetworkId, targetNetworkId, cellViewIsSelected]
+  )
 
   const { label } = props
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
 
-  const handleOpenDropdownMenu = (
-    event: React.MouseEvent<HTMLButtonElement>,
-  ): void => {
-    setAnchorEl(event.currentTarget)
-  }
-
   const op = useRef(null)
 
   const handleClose = (): void => {
-    ;(op.current as any)?.hide()
+    ; (op.current as any)?.hide()
     setAnchorEl(null)
   }
 
@@ -89,21 +86,24 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
     setOpenDialog(open)
   }
 
-  const afterLayout = (positionMap: Map<IdType, [number, number]>): void => {
-    // Update node positions in the view model
-    updateNodePositions(targetNetworkId, positionMap)
-    setIsRunning(false)
-    console.log('Finished layout')
-  }
+  const afterLayout = useCallback(
+    (positionMap: Map<IdType, [number, number]>) => {
+      // Update node positions in the view model
+      updateNodePositions(targetNetworkId, positionMap);
+      setIsRunning(false);
+      console.log('Finished layout');
+    },
+    [targetNetworkId, updateNodePositions, setIsRunning]
+  );
 
-  const getMenuItems = (): any => {
-    const layoutMenuItems: any[] = []
+  const menuItems = useMemo(() => {
+    const layoutMenuItems: any[] = [];
     layoutEngines.forEach((layoutEngine: LayoutEngine) => {
-      const engineName: string = layoutEngine.name
-      const names: string[] = Object.keys(layoutEngine.algorithms)
+      const engineName: string = layoutEngine.name;
+      const names: string[] = Object.keys(layoutEngine.algorithms);
       names.forEach((name: string) => {
-        const algorithm = layoutEngine.algorithms[name]
-        const menuItem = {
+        const algorithm = layoutEngine.algorithms[name];
+        layoutMenuItems.push({
           key: `${engineName}-${name}`,
           label: `${engineName}: ${name}`,
           description: algorithm.description ?? name,
@@ -111,7 +111,7 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
             algorithm.threshold === undefined
               ? false
               : target.nodes?.length + target.edges?.length >
-                algorithm.threshold,
+              algorithm.threshold,
           onClick: () => {
             if (target === undefined) {
               return
@@ -123,37 +123,33 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
             setIsRunning(true)
             engine.apply(nodes, edges, afterLayout, engine.algorithms[name])
           },
-        }
-
-        layoutMenuItems.push(menuItem)
-      })
-    })
+        });
+      });
+    });
 
     return [
-      ...layoutMenuItems.map((menuItem: any) => {
-        return {
-          label: menuItem.label,
-          template: (
-            <Tooltip
-              arrow
-              placement={'right'}
-              title={menuItem.description}
+      ...layoutMenuItems.map((menuItem) => ({
+        label: menuItem.label,
+        template: (
+          <Tooltip
+            arrow
+            placement="right"
+            title={menuItem.description}
+            key={menuItem.key}
+          >
+            <MenuItem
               key={menuItem.key}
+              disabled={menuItem.disabled}
+              onClick={() => {
+                handleClose();
+                menuItem.onClick();
+              }}
             >
-              <MenuItem
-                key={menuItem.key}
-                disabled={menuItem.disabled}
-                onClick={() => {
-                  handleClose()
-                  menuItem.onClick()
-                }}
-              >
-                {menuItem.label}
-              </MenuItem>
-            </Tooltip>
-          ),
-        }
-      }),
+              {menuItem.label}
+            </MenuItem>
+          </Tooltip>
+        ),
+      })),
       {
         label: '',
         template: <Divider />,
@@ -166,8 +162,9 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
           </MenuItem>
         ),
       },
-    ]
-  }
+    ];
+  }, [layoutEngines, target, afterLayout]);
+
 
   const innerButton = disabled ? (
     <Tooltip title="Layouts cannot be applied to the current network view">
@@ -208,7 +205,7 @@ export const LayoutMenu = (props: DropdownMenuProps): JSX.Element => {
     <PrimeReactProvider>
       {innerButton}
       <OverlayPanel ref={op} unstyled>
-        <TieredMenu model={getMenuItems()} />
+        <TieredMenu model={menuItems} />
       </OverlayPanel>
       <LayoutOptionDialog
         afterLayout={afterLayout}

@@ -68,6 +68,7 @@ export const ServiceSettingsDialog = ({
   }, [])
 
   const handleAddServiceApp = async () => {
+    
     let trimmedUrl: string = newUrl.trim()
     if (trimmedUrl.endsWith('/')) {
       trimmedUrl = trimmedUrl.slice(0, -1) // Remove the last character if it is '/'
@@ -88,6 +89,22 @@ export const ServiceSettingsDialog = ({
   const handleDeleteServiceApp = (url: string) => {
     removeService(url)
   }
+
+  const [isInputValid, setIsInputValid] = useState(false);
+  const isValidUrl = (url: string): boolean => {
+    try {
+      const parsedUrl = new URL(url);
+      return !!parsedUrl.protocol && !!parsedUrl.hostname;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleUrlChange = (value: string) => {
+    const trimmedValue = value.trim();
+    setNewUrl(trimmedValue);
+    setIsInputValid(isValidUrl(trimmedValue));
+  };
 
   const handleClearUrl = () => {
     setNewUrl('')
@@ -162,10 +179,12 @@ export const ServiceSettingsDialog = ({
           <TextField
             label="Enter new external service URL"
             value={newUrl}
-            onChange={(e) => setNewUrl(e.target.value)}
+            onChange={(e) => handleUrlChange(e.target.value)}
             style={{ marginRight: theme.spacing(1) }}
             size="small"
             sx={{ flexGrow: 1 }}
+            error={!isInputValid && newUrl.trim() !== ''}
+            helperText={!isInputValid && newUrl.trim() !== '' ? 'Enter a valid URL' : ''}
           />
           <Button
             variant="outlined"
@@ -180,7 +199,7 @@ export const ServiceSettingsDialog = ({
             variant="outlined"
             color="primary"
             onClick={handleAddServiceApp}
-            disabled={newUrl.trim() === ''}
+            disabled={!isInputValid || newUrl.trim() === ''}
             sx={{ width: '4em' }}
           >
             Add
